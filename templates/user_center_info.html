@@ -1,0 +1,53 @@
+{% extends 'public/base_nocar.html' %}
+
+{% load staticfiles %}
+
+{% block title %} 用户中心-个人信息{% endblock %}
+
+{% block js %}{% endblock %}
+
+{% block search_title %}个人信息{% endblock %}
+
+{% block content %}
+    <div class="main_con clearfix">
+		{% include 'public/left_user_nav.html' %}
+		<div class="right_content clearfix">
+				<div class="info_con clearfix">
+				<h3 class="common_title2">基本信息</h3>
+						<ul class="user_info_list">
+							{% if address %}
+                            <li><span>收件人：</span>{{ address.receiver }}</li>
+							<li><span>联系方式：</span>{{ address.phone}}</li>
+							<li><span>联系地址：</span>{{ address.addr }}</li>
+                            {% else %}
+                            <li style="color: red"><span>收件人：</span>无收件人</li>
+							<li style="color: red"><span>联系方式：</span>无联系方式</li>
+							<li style="color: red"><span>联系地址：</span>无联系地址</li>
+                            {% endif %}
+						</ul>
+				</div>
+
+				<h3 class="common_title2">最近浏览</h3>
+				<div class="has_view_list">
+					<ul class="goods_type_list clearfix">
+
+                {% for goods in goods_li %}
+				<li>
+					<a href="/detail/?goods_id={{ goods.id }}"><img src="/media/{{ goods.image }}"></a>
+					<h4><a href="/detail/?goods_id={{ goods.id }}">{{ goods.name }}</a></h4>
+					<div class="operate">
+						<span class="prize">￥{{ goods.price }}</span>
+						<span class="unit">{{ goods.price}}/{{ goods.unite }}</span>
+						<a href="#" class="add_goods" title="加入购物车"></a>
+					</div>
+                </li>
+                    {% empty %}
+                        <span style="color:red;font-size: 16px;">无历史浏览记录</span>
+                {% endfor %}
+			</ul>
+		</div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block bottom_js %}{% endblock %}

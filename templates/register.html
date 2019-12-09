@@ -1,0 +1,246 @@
+{% extends 'public/base.html' %}
+{#加载静态文件#}
+{% load staticfiles %}
+
+{% block title %}注册页面{% endblock %}
+
+{% block js %}
+    <script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block search %}{% endblock %}
+
+{% block content %}
+    <div class="register_con">
+        <div class="l_con fl">
+            <a class="reg_logo"><img src="{% static 'images/logo02.png' %} "></a>
+            <div class="reg_slogan">良心食材~放心享用~</div>
+            <div class="reg_banner"></div>
+        </div>
+
+        <div class="r_con fr">
+            <div class="reg_title clearfix">
+                <h1>用户注册</h1>
+                <a href="/user/login/">登录 ></a>
+            </div>
+            <div class="reg_form clearfix">
+                <form action="/user/register/" method="post" id="submit">
+                    {# 提交表单提交 加上#}
+                    {% csrf_token %}
+                    <ul>
+                        <li>
+                            <label>用户名:</label>
+                            <input type="text" name="user_name" id="user_name">
+                            <span class="error_tip" id="unameSpan">提示信息</span>
+                        </li>
+                        <li>
+                            <label>密码:</label>
+                            <input type="password" name="pwd" id="pwd">
+                            <span class="error_tip" id="pwdSpan">提示信息</span>
+                        </li>
+                        <li>
+                            <label>确认密码:</label>
+                            <input type="password" name="cpwd" id="cpwd">
+                            <span class="error_tip" id="cpwdSpan">提示信息</span>
+                        </li>
+                        <li>
+                            <label>邮箱:</label>
+                            <input type="text" name="email" id="email">
+                            <span class="error_tip" id="emailSpan">提示信息</span>
+                        </li>
+                        <li class="agreement">
+                            <input type="checkbox" name="allow" id="allow" checked="checked">
+                            <label>同意”良食速运用户使用协议“</label>
+                            <span class="error_tip2" id="allowSpan">提示信息</span>
+                        </li>
+                        <li class="reg_sub">
+                            <input type="submit" value="注 册" name="" >
+                        </li>
+                    </ul>
+                    {{ errmsg }}
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}
+
+
+{% block bottom_js %}
+    <script>
+        $(function () {
+            user_err = false
+            pwd_err = false
+            cpwd_err = false
+            email_err = false
+            allow_err = false
+
+            // blur 表示失去焦点时触发函数， # 表示 属性 id， . 表示class
+            // 用户名(username）验证
+            $('#user_name').blur(function () {
+                check_uname();
+            })
+            // 密码(pwd)验证
+            $('#pwd').blur(function () {
+                check_pwd();
+            })
+            // 确认密码验证
+            $('#cpwd').blur(function () {
+                check_cpwd();
+            })
+            // 邮箱验证（email）
+            $('#email').blur(function () {
+                check_email();
+            })
+            // 勾选协议验证 （allow）
+            $('#allow').blur(function () {
+                check_allow();
+            })
+
+
+            // username 验证
+            function check_uname() {
+                username = $('#user_name').val();
+                res = /^\w{3,8}$/gi;        // g:全局匹配  i:忽略大小写
+                $('#unameSpan').css('display','block')   //span  display 默认是 none  设置为block 强制转为块级元素
+
+                if (username.length == 0) {
+                    $('#unameSpan').text('用户名不能为空')
+                    $('#unameSpan').css('color', 'red')
+                    user_err = true
+                } else if (res.test(username)) {
+                    // 用户名符合正则标准的话 判断是否已存在,触发一个视图函数 返回值 data
+                    $.get('/user/code_user/', {'username': username}, function (data) {
+                        flag = data.flag
+                        if (flag) {
+                            $('#unameSpan').text('用户名已存在')
+                            $('#unameSpan').css('color', 'red')
+                            user_err = true
+                        } else {
+                            $('#unameSpan').text('恭喜，用户名可用！')
+                            $('#unameSpan').css('color', 'green')
+                            user_err = false
+                        }
+
+                    })
+                } else {
+                    $('#unameSpan').text('用户名格式错误')
+                    $('#unameSpan').css('color', 'red')
+                    user_err = true
+                }
+            }
+
+            // 密码pwd 验证
+            function check_pwd() {
+                pwd = $('#pwd').val()
+                res = /^[a-zA-Z0-9]{4,10}$/;   // 密码格式为4-10位，字母数字组成
+                $('#pwdSpan').css('display', 'block')
+
+                if (pwd.length == 0) {
+                    $('#pwdSpan').text('密码不能为空')
+                    $('#pwdSpan').css('color', 'red')
+                    pwd_err = true
+
+                } else if (res.test(pwd)) {
+                    $('#pwdSpan').text('密码OK')
+                    $('#pwdSpan').css('color', 'green')
+                    pwd_err = false
+                } else {
+                    $('#pwdSpan').text('密码格式有误，请输入4-10位，字母数字组成')
+                    $('#pwdSpan').css('color', 'red')
+                    pwd_err = true
+                }
+            }
+
+            // cpwd 确认密码验证
+            function check_cpwd() {
+                cpwd = $('#cpwd').val()
+                res = /^[a-zA-Z0-9]{4,10}$/; // 密码格式为4-10位，字母数字组成
+                $('#cpwdSpan').css('display', 'block')
+                if (cpwd.length == 0) {
+                    $('#cpwdSpan').text('确认密码不能为空')
+                    $('#cpwdSpan').css('color', 'red')
+                    pwd_err = false
+
+                } else if (res.test(cpwd)) {
+                    if (cpwd != pwd) {
+                        $('#cpwdSpan').text('两次输入的密码不一致！')
+                        $('#cpwdSpan').css('color', 'red')
+                        cpwd_err = true
+                    } else {
+                        $('#cpwdSpan').text('确认密码 OK')
+                        $('#cpwdSpan').css('color', 'green')
+                        cpwd_err = true
+                    }
+                } else {
+                    $('#pwdSpan').text('密码格式有误，请输入4-10位，字母数字组成')
+                    $('#pwdSpan').css('color', 'red')
+                    pwd_err = false
+                }
+            }
+
+            // email 验证
+            function check_email() {
+                email = $('#email').val()
+                res = /^([a-zA-Z]|[0-9])(\w|\-)+@[a-zA-Z0-9]+\.([a-zA-Z]{2,4})$/;
+                $('#emailSpan').css('display', 'block')
+
+                if (email.length == 0) {
+                    $('#emailSpan').html('邮箱不能为空')
+                    $('#emailSpan').css('color', 'red')
+                    email_err = true
+                } else if (res.test(email)) {
+                    $.get('/user/code_email/', {'email': email}, function (data) {
+                        flag = data.flag
+                        if (flag) {
+                            $('#emailSpan').html('邮箱已存在')
+                            $('#emailSpan').css('color', 'red')
+                            email_err = true
+                        } else {
+                            $('#emailSpan').html('邮箱可用OK')
+                            $('#emailSpan').css('color', 'green')
+                            email_err = false
+                        }
+                    })
+                } else {
+                    $('#emailSpan').html('邮箱格式错误')
+                    $('#emailSpan').css('color', 'red')
+                    email_err = true
+                }
+            }
+
+            // allow 验证
+            function check_allow() {
+                allow = $('#allow').is(':chec   ked')
+                if (allow) {
+                    $('#allowSpan').html('')
+                    allow_err = false
+                } else {
+                    $('#allowSpan').html('请勾选')
+                    $('#allowSpan').css('color', 'red')
+                    $('#allowSpan').css('display', 'block')
+                    allow_err = true
+                }
+            }
+
+            //提交验证
+            $('#submit').submit(function () {
+                check_uname();
+                check_pwd();
+                check_cpwd();
+                check_email();
+                check_allow();
+                // 判断验证都成功了就跳转
+                if(user_err == false && pwd_err == false && cpwd_err == false && email_err == false && allow_err == false){
+                    return true
+                }else{
+                    return false
+                }
+            })
+        })
+    </script>
+
+{% endblock %}

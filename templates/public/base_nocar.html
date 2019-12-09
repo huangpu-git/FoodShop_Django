@@ -1,0 +1,18 @@
+{% extends 'public/base.html' %}
+
+{% load staticfiles %}
+
+{% block search_bar%}
+    <div class="search_bar clearfix">
+		<a href="/index/" class="logo fl"><img src="{% static '' %}images/logo.png"></a>
+		<div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;{% block search_title %}用户中心{% endblock %}</div>
+		<div class="search_con fr">
+			 <form action="/search/" method="get">
+            {# name 设为 q 表示为搜索#}
+			<input type="text" class="input_text fl" name="q" placeholder="搜索商品">
+			<input type="submit" class="input_btn fr"  value="搜索">
+            </form>
+		</div>
+	</div>
+
+{% endblock %}

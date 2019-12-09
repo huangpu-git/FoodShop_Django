@@ -1,0 +1,180 @@
+{% load staticfiles %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>{% block title %}良食速运-首页{% endblock %}</title>
+	{% block style %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+	{% endblock %}
+    {% block js %}
+    <script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/jquery-ui.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/slide.js' %}"></script>
+    {% endblock %}
+</head>
+<body>
+    {% block header %}
+	<div class="header_con">
+		<div class="header">
+			<div class="welcome fl">欢迎来到良食速运!</div>
+			<div class="fr">
+                {% if user %}
+				<div class="login_btn fl">
+					欢迎您：<em>{{ user.username }}</em>
+                    <span>|</span>
+					<a href="/user/login_out/">退出登录</a>
+				</div>
+                {% else %}
+				<div class="login_btn fl">
+					<a href="/user/login/">登录</a>
+					<span>|</span>
+					<a href="/user/register/">注册</a>
+				</div>
+                {% endif %}
+				<div class="user_link fl">
+					<span>|</span>
+					<a href="/user/">用户中心</a>
+					<span>|</span>
+					<a href="/cart/info">我的购物车</a>
+					<span>|</span>
+					<a href="/user/order/1">我的订单</a>
+				</div>
+			</div>
+		</div>
+	</div>
+    {% endblock %}
+
+    {% block search_bar %}
+	<div class="search_bar clearfix">
+		<a href="/index/" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
+		<div class="search_con fl">
+            <form action="/search/" method="get">
+            {# name 设为 q 表示为搜索#}
+            <input type="text" class="input_text fl" name="q" placeholder="搜索商品">
+            <input type="submit" class="input_btn fr"  value="搜索">
+            </form>
+		</div>
+		<div class="guest_cart fr">
+			<a href="/cart/info" class="cart_name fl">我的购物车</a>
+			<div class="goods_count fl" id="show_count">{{ cart_count }}</div>
+		</div>
+	</div>
+    {% endblock %}
+
+    {% block content %}
+	<div class="navbar_con">
+		<div class="navbar">
+			<h1 class="fl">全部商品分类</h1>
+			<ul class="navlist fl">
+				<li><a href="">首页</a></li>
+				<li class="interval">|</li>
+				<li><a href="">手机生鲜</a></li>
+				<li class="interval">|</li>
+				<li><a href="">抽奖</a></li>
+			</ul>
+		</div>
+	</div>
+
+	<div class="center_con clearfix">
+		<ul class="subnav fl">
+
+            {% for type in types %}
+                {#  forloop.counter  用来获取当前循环次数#}
+			    <li><a href="#model0{{ forloop.counter }}" class="{{ type.logo  }}">{{ type.name }}</a></li>
+            {% endfor %}
+
+		</ul>
+		<div class="slide fl">
+			<ul class="slide_pics">
+
+                {% for banner in goods_banners %}
+                    {# banner.image 是存储在数据库的路径#}
+				    <li><img src="/media/{{ banner.image }}" alt="幻灯片"></li>
+                {% endfor %}
+
+			</ul>
+			<div class="prev"></div>
+			<div class="next"></div>
+			<ul class="points"></ul>
+		</div>
+		<div class="adv fl">
+            
+            {% for banner in promotion_Banners %}
+			    <a href="{{ banner.url }}"><img src="/media/{{banner.image}}"></a>
+			{% endfor %}
+
+		</div>
+	</div>
+
+    {% for type in types %}
+	<div class="list_model">
+		<div class="list_title clearfix">
+			<h3 class="fl" id="model0{{ forloop.counter }}">{{ type.name }}</h3>
+			<div class="subtitle fl">
+				<span>|</span>
+
+                {% for banner in type.title_banners %}
+				    <a href="/detail/?goods_id={{ banner.sku.id }}">{{ banner.sku.name }}</a>
+                {% endfor %}
+
+			</div>
+			<a href="/list/{{ type.id }}/?sort=default" class="goods_more fr" id="fruit_more">查看更多 ></a>
+		</div>
+
+		<div class="goods_con clearfix">
+			<div class="goods_banner fl"><img src="/media/{{ type.image }}"></div>
+			<ul class="goods_list fl">
+
+                {% for banner in type.image_banners %}
+				<li>
+					<h4><a href="/detail/?goods_id={{ banner.sku.id }}">{{ banner.sku.name }}</a></h4>
+					<a href="/detail/?goods_id={{ banner.sku.id }}"><img src="/media/{{ banner.sku.image }}"></a>
+					<div class="prize">¥{{ banner.sku.price }}</div>
+				</li>
+                {% endfor %}
+
+			</ul>
+		</div>
+	</div>
+    {% endfor %}
+
+    {% endblock %}
+
+    {% block footer %}
+	<div class="footer">
+		<div class="foot_link">
+			<a href="#">关于我们</a>
+			<span>|</span>
+			<a href="#">联系我们</a>
+			<span>|</span>
+			<a href="#">招聘人才</a>
+			<span>|</span>
+			<a href="#">友情链接</a>
+		</div>
+		<p>CopyRight © 2019 北京良食速运信息技术有限公司 All Rights Reserved</p>
+		<p>电话：010-****888    京ICP备*******8号</p>
+	</div>
+    {% endblock %}
+
+    {% block bottom_js %}
+	<script type="text/javascript">
+		BCSlideshow('focuspic');
+		var oFruit = document.getElementById('fruit_more');
+		var oShownum = document.getElementById('show_count');
+
+		var hasorder = localStorage.getItem('order_finish');
+
+		if(hasorder)
+		{
+			oShownum.innerHTML = '2';
+		}
+
+		oFruit.onclick = function(){
+			window.location.href = 'list.html';
+		}
+	</script>
+    {% endblock %}
+</body>
+</html>

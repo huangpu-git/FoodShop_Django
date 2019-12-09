@@ -1,0 +1,279 @@
+{% extends 'public/base_nocar.html' %}
+
+{% load staticfiles %}
+
+{% block title %}我的购物车{% endblock %}
+
+{% block search_title %}购物车{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+    <div class="total_count">全部商品<em>{{ total_count }}</em>件</div>
+    <ul class="cart_list_th clearfix">
+        <li class="col01">商品名称</li>
+        <li class="col02">商品单位</li>
+        <li class="col03">商品价格</li>
+        <li class="col04">数量</li>
+        <li class="col05">小计</li>
+        <li class="col06">操作</li>
+    </ul>
+    <form action="/order/place/" method="post">
+    {% for sku in skus %}
+        <ul class="cart_list_td clearfix">
+            {# 设置一个隐藏域#}
+            <input type="hidden" name="sku_ids" value="{{ sku.id }}">
+            <li class="col01"><input type="checkbox" name="" checked></li>
+            <li class="col02"><img src="/media/{{ sku.image }}"></li>
+            <li class="col03">{{ sku.name }}<br><em>{{ sku.price }}元/{{ sku.unite }}g</em></li>
+            <li class="col04">{{ sku.unite }}g</li>
+            <li class="col05">{{ sku.price }}元</li>
+            <li class="col06">
+                <div class="num_add">
+                    {% csrf_token %}
+                    <a href="javascript:;" class="add fl">+</a>
+                    <input type="text" class="num_show fl" value="{{ sku.count }}" sku_id="{{ sku.id }}">
+                    <a href="javascript:;" class="minus fl">-</a>
+                </div>
+            </li>
+            <li class="col07">{{ sku.amount }}元</li>
+            <li class="col08"><a href="javascript:;">删除</a></li>
+
+        </ul>
+    {% endfor %}
+
+    <ul class="settlements">
+        <li class="col01"><input type="checkbox" name="" checked=""></li>
+        <li class="col02">全选</li>
+        <li class="col03">合计(不含运费)：<span>¥</span><em>{{ total_price }}</em><br>共计<b>{{ total_count }}</b>件商品</li>
+        <li class="col04"><input type="submit" value="去结算"></li>
+    </ul>
+      </form>
+{% endblock %}
+
+
+{% block bottom_js %}
+    <script>
+        // 1.商品的全选|反选  /change 是发生改变的时候
+        $('.settlements').find(':checkbox').change(function () {
+            {#prop() 默认自带的属性，attr 是自己的添加的属性#}
+            is_checked = $(this).prop('checked')  // 获取全选 的属性值
+            $('.cart_list_td').find(':checkbox').prop('checked', is_checked)  // prop 里面两个参数是赋值
+            {# 更新总价格和总数量 #}
+            update_page_info()
+        })
+
+        // 2.计算被选中商品的总件数与总价格
+        function update_page_info() {
+            total_count = 0
+            total_price = 0
+            $('.cart_list_td').find(':checked').parents('ul').each(function () {
+                // 获取商品的数目和小计
+                count = $(this).find('.num_show').val()
+                count = parseInt(count)
+                amount = $(this).children('.col07').text()
+                amount = parseFloat(amount)
+                // 累加计算商品的总件数与总价格
+                total_count += count
+                total_price += amount
+            })
+            // 设置别选中的商品的总数与总价格  toFixed（2） 保留两位小数
+            $('.settlements').find('em').text(total_price.toFixed(2) + '元')
+            $('.settlements').find('b').text(total_count)
+            $('.total_count').find('em').text(total_count)
+        }
+
+        // 3.商品对应的checkbox状态发生改变时，设置全选checkbox的状态
+        $('.cart_list_td').find(':checkbox').change(function () {
+            // 获取页面上所有的商品数目
+            all_len = $('.cart_list_td').length
+            // 获取页面被选中的商品的数目
+            checked_len = $('.cart_list_td').find(":checked").length
+            is_checked = true
+            if (checked_len < all_len) {
+                is_checked = false
+            }
+            $('.settlements').find(':checkbox').prop('checked', is_checked)
+
+            update_page_info()
+
+
+        })
+
+        // 4. 购物车数量的添加 用 ajax 技术来添加
+        $('.add').click(function () {
+            // 获取商品的ID 与商品的数量count
+            sku_id = $(this).next().attr('sku_id')
+            count = $(this).next().val()
+            count = parseInt(count) + 1
+            csrf = $('input[name="csrfmiddlewaretoken"]').val()  // 用 ajax 需设置此参数
+
+            // 组织参数
+            params = {
+                'sku_id': sku_id,
+                'count': count,
+                'csrfmiddlewaretoken': csrf,
+            }
+            // 发送post ajax 请求， 访问/cart/update/, 传递参数：sku_id count
+            error_update = true
+
+            // 设置ajax请求为同步,设置同步后 等到后台返回结果后再处理
+            $.ajaxSettings.async = false
+            $.post('/cart/update/', params, function (data) {
+                if (data.res == 5) {
+                    error_update = false
+                } else {
+                    error.update = true
+                }
+
+            })
+            // 设置ajax请求为异步
+            $.ajaxSettings.async = true
+
+            // 重新设置数据
+            if (error_update == false) {
+                // 重置输入框
+                $(this).next().val(count)
+                // 获取商品的小计
+                update_goods_amount($(this).parents('ul'))
+                update_page_info()
+            }
+        })
+
+        // 5. 获取商品小计
+        function update_goods_amount(sku_ul) {
+            count = sku_ul.find('.num_show').val()
+            price = sku_ul.find('.col05').text()
+            amount = parseInt(count) * parseFloat(price)
+
+            sku_ul.find('.col07').text(amount.toFixed(2) + '元')
+
+        }
+
+        // 6.购物车数量减少
+        $('.minus').click(function () {
+            // 获取商品的ID 与商品的数量count   prev 是找上一个
+            sku_id = $(this).prev().attr('sku_id')
+            count = $(this).prev().val()
+            count = parseInt(count) - 1
+            if (count < 1) {
+                count = 1
+            }
+            csrf = $('input[name="csrfmiddlewaretoken"]').val()  // 用 ajax 需设置此参数
+
+            // 组织参数
+            params = {
+                'sku_id': sku_id,
+                'count': count,
+                'csrfmiddlewaretoken': csrf,
+            }
+            // 发送post ajax 请求， 访问/cart/update/, 传递参数：sku_id count
+            error_update = true
+
+            // 设置ajax请求为同步,设置同步后 等到后台返回结果后再处理
+            $.ajaxSettings.async = false
+            $.post('/cart/update/', params, function (data) {
+                if (data.res == 5) {
+                    error_update = false
+                } else {
+                    error.update = true
+                }
+
+            })
+            // 设置ajax请求为异步
+            $.ajaxSettings.async = true
+
+            // 重新设置数据
+            if (error_update == false) {
+                // 重置输入框
+                $(this).prev().val(count)
+                // 获取商品的小计
+                update_goods_amount($(this).parents('ul'))
+                update_page_info()
+            }
+        })
+
+        // 7.手动获取输入之前的值
+        $('.num_show').focus(function(){
+            pre_count = $(this).val()
+            pre_count = parseInt(pre_count)
+        })
+
+        // 8. 手动输入设置
+        $('.num_show').blur(function(){
+            // 获取参数
+            count = $(this).val()
+            count = parseInt(count)
+            if (isNaN(count) || count <1 ){
+                count = pre_count
+            }
+            sku_id = $(this).attr('sku_id')
+            csrf = $('input[name="csrfmiddlewaretoken"]').val()  // 用 ajax 需设置此参数
+
+            // 组织上下文
+            params = {
+                'sku_id':sku_id,
+                'count':count,
+                'csrfmiddlewaretoken':csrf,
+            }
+            error_update = true
+            $.ajaxSettings.async = false   // ajax 设为同步
+
+            $.post('/cart/update/',params,function(data){
+                if (data.res == 5){
+                    error_update = false
+                }else {
+                    error_update = true
+                    alert(data.errmsg)
+                }
+            })
+            $.ajaxSettings.asysnc = true  // ajax 再设回异步
+
+            if (error_update == false){
+                // 重置输入框值
+                $(this).val(count)
+                // 获取商品小计
+                update_goods_amount($(this).parents('ul'))
+                // 获取商品总数量与总价格
+                update_page_info()
+            }else{
+                $(this).val(pre_count)
+            }
+        })
+
+        // 9. 删除购物车的记录
+        $('.cart_list_td').children('.col08').children('a').click(function(){
+                    // 获取对应的商品的ID
+                    sku_id = $(this).parents('ul').find('.num_show').attr('sku_id')
+                    csrf =$('input[name="csrfmiddlewaretoken"]').val()
+
+                    // 组织参数
+                    params = {
+                        'sku_id':sku_id,
+                        'csrfmiddlewaretoken':csrf,
+                    }
+
+                    // 获取商品所在的ul元素
+                    sku_ul = $(this).parents('ul')
+
+                    // 发起AjAX 请求，访问/cart/delete/,传递参数：sku_id
+                    $.post('/cart/delete/',params,function(data){
+                        if (data.res == 3){
+                            // 移除页面上商品对应的ul元素
+                            sku_ul.remove()
+                            update_page_info()
+                        }else {
+                            alert(data.errmsg)
+                        }
+
+                    })
+
+                })
+
+
+    </script>
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'public/base.html' %}
+
+{% load staticfiles %}
+
+{% block title %}商品的列表{% endblock %}
+
+{% block js %}{% endblock %}
+
+{% block content %}
+
+    <div class="navbar_con">
+		<div class="navbar clearfix">
+			<div class="subnav_con fl">
+				<h1>全部商品分类</h1>
+				<span></span>
+				<ul class="subnav">
+                    {% for type in types %}
+					<li><a href="/list/{{ type.id }}?sort=default" class="{{ type.logo }}">{{ type.name }}</a></li>
+                    {% endfor %}
+				</ul>
+			</div>
+			<ul class="navlist fl">
+				<li><a href="">首页</a></li>
+				<li class="interval">|</li>
+				<li><a href="">手机生鲜</a></li>
+				<li class="interval">|</li>
+				<li><a href="">抽奖</a></li>
+			</ul>
+		</div>
+	</div>
+
+	<div class="breadcrumb">
+		<a href="#">全部分类</a>
+		<span>></span>
+		<a href="/list/{{ type.id }}/?sort=default">{{ type.name }}</a>
+	</div>
+
+	<div class="main_wrap clearfix">
+		<div class="l_wrap fl clearfix">
+			<div class="new_goods">
+				<h3>新品推荐</h3>
+				<ul>
+					{% for sku in new_skus %}
+                    <li>
+						<a href="/detail/?goods_id = {{ sku.id }}"><img src="/media/{{ sku.image }}"></a>
+						<h4><a href="#">{{ sku.name }}</a></h4>
+						<div class="prize">￥{{ sku.price }}</div>
+					</li>
+                    {% endfor %}
+
+				</ul>
+			</div>
+		</div>
+
+		<div class="r_wrap fr clearfix">
+			<div class="sort_bar">
+				<a href="/list/{{ type.id }}/?sort=default" {% if sort == 'default' %} class="active" {% endif %} >默认</a>
+				<a href="/list/{{ type.id }}/?sort=price" {% if sort == 'price' %} class="active" {% endif %}>价格</a>
+				<a href="/list/{{ type.id }}/?sort=hot" {% if sort == 'hot' %} class="active" {% endif %}>人气</a>
+			</div>
+
+			<ul class="goods_type_list clearfix">
+                {% for sku in skus %}
+				<li>
+					<a href="/detail/?goods_id = {{ sku.id }}"><img src="/media/{{ sku.image }}"></a>
+					<h4><a href="/detail/?goods_id = {{ sku.id }}">{{ sku.name }}</a></h4>
+					<div class="operate">
+						<span class="prize">￥{{ sku.price }}</span>
+						<span class="unit">{{ sku.price }}/{{ sku.unite }}</span>
+						<a href="#" class="add_goods" title="加入购物车"></a>
+					</div>
+				</li>
+                {% endfor %}
+
+			</ul>
+
+			<div class="pagenation">
+                {#  has_previous 是否有上一页#}
+				{% if skus.has_previous %}
+                    <a href="/list/{{ type.id }}/?sort={{ sort }}&num={{ skus.previous_page_number }}"><上一页</a>
+                {% endif %}
+
+                {% for pn in page_num %}
+				    <a href="/list/{{ type.id }}/?sort={{ sort }}&num={{ pn }}" {% if num == pn %} class="active" {% endif %}>{{ pn }}</a>
+                {% endfor %}
+
+                {#是否有下一页  has_next#}
+                {% if skus.has_next %}
+				    <a href="/list/{{ type.id }}/?sort={{ sort }}&num={{ skus.next_page_number }}">下一页></a>
+                {% endif %}
+			</div>
+		</div>
+	</div>
+
+
+{% endblock %}
+
+{% block bottom_js %}{% endblock %}
