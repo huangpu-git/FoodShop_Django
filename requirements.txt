@@ -31,7 +31,7 @@ PyMySQL==0.9.3
 pyOpenSSL==19.1.0
 python-alipay-sdk==2.0.0
 pytz==2019.3
-PyYAML==5.2
+PyYAML==5.4
 redis==3.3.11
 requests==2.22.0
 shellescape==3.4.1
